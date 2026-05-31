@@ -24,8 +24,6 @@ V-IDS captures live network traffic in promiscuous mode, dissects protocol heade
 <img src="assets/dashboard_full.png" alt="V-IDS Web Dashboard" width="100%">
 
 **CLI Interface**
-<img src="assets/terminal1.png" alt="V-IDS Terminal Startup" width="100%">
-<br>
 <img src="assets/terminal2.png" alt="V-IDS Terminal Output" width="100%">
 
 ## Architecture
