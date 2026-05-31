@@ -1,0 +1,85 @@
+# ============================================================
+# V-IDS — Default Configuration
+# ============================================================
+# Override via CLI flags or a custom config file:
+#   sudo ./run.sh -c /path/to/custom.yaml
+
+# --- Network ---
+network:
+  interface: ""                         # Auto-detect if empty (interactive menu)
+  bpf_filter: ""                        # BPF filter to reduce noise
+                                        # Example: "not port 22 and not port 443"
+
+# --- Logging ---
+logging:
+  log_file: "/var/log/v-ids.log"        # Primary log path (requires root)
+  fallback_log_file: "./v-ids.log"      # Fallback if primary is not writable
+  log_level: "INFO"                     # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  colorize_stdout: true                 # Colorized terminal output
+  rate_limit_seconds: 30                # Suppress duplicate alerts within this window
+
+# --- Detection Rules ---
+# Based on MITRE ATT&CK framework and Snort/Suricata rulesets.
+# Each rule can be enabled/disabled and has tunable thresholds.
+
+detection:
+  # T1046 — Network Service Scanning (Snort GID:122)
+  # Tracks unique destination ports per source IP.
+  port_scan:
+    enabled: true
+    unique_ports_threshold: 15          # Unique ports before alert
+    window_seconds: 60                  # Rolling window duration (seconds)
+    severity: "HIGH"
+
+  # T1552.001 — Credentials in Unencrypted Protocols
+  # Inspects payloads on cleartext protocol ports.
+  cleartext_creds:
+    enabled: true
+    monitored_ports: [21, 23, 80, 110, 143, 8080]  # FTP, Telnet, HTTP, POP3, IMAP
+    patterns:
+      - "USER "
+      - "PASS "
+      - "password="
+      - "passwd="
+      - "login="
+      - "username="
+      - "pwd="
+      - "Authorization: Basic"
+    severity: "CRITICAL"
+
+  # T1498 — Network Denial of Service (Snort SID:368, SID:480)
+  # Volume-based flood detection + oversized packet (Ping of Death).
+  icmp_flood:
+    enabled: true
+    icmp_threshold: 100                 # Echo requests before alert
+    window_seconds: 10                  # Rolling window duration
+    oversized_bytes: 1500               # Packet size alert threshold (MTU)
+    severity: "MEDIUM"
+
+  # T1110.001 — Brute Force: Password Guessing (ET SID:2001219)
+  # Rapid SSH connection attempts from a single source.
+  ssh_brute_force:
+    enabled: true
+    attempt_threshold: 10               # SYN to port 22 before alert
+    window_seconds: 60                  # Rolling window duration
+    target_port: 22                     # SSH port
+    severity: "HIGH"
+
+  # T1190 — Exploit Public-Facing Application (OWASP Top 10)
+  # Detects path traversal, SQL injection, XSS, command injection.
+  http_threats:
+    enabled: true
+    http_ports: [80, 8080, 8443, 8888]  # Ports to inspect
+    severity: "CRITICAL"
+
+# --- Engine ---
+engine:
+  queue_size: 10000                     # Max packets in processing queue
+  cleanup_interval_seconds: 60          # How often to prune stale state
+
+# --- Dashboard ---
+dashboard:
+  enabled: true                         # Start web dashboard on launch
+  host: "0.0.0.0"                       # Dashboard bind address
+  port: 8847                            # Dashboard port
+  max_alerts_history: 500               # Max alerts to keep in memory for UI

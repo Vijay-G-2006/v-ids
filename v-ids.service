@@ -1,0 +1,28 @@
+[Unit]
+Description=V-IDS Intrusion Detection System
+Documentation=https://github.com/justin/v-ids
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/v-ids/run.sh -i eth0
+WorkingDirectory=/opt/v-ids
+Restart=on-failure
+RestartSec=5
+User=root
+
+# Security hardening
+NoNewPrivileges=no
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/v-ids.log
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=v-ids
+
+[Install]
+WantedBy=multi-user.target

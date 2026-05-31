@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V-IDS — Intrusion Detection Dashboard</title>
+    <meta name="description" content="V-IDS real-time network intrusion detection monitoring dashboard">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- ═══ Top Navigation Bar ═══ -->
+    <nav class="topbar">
+        <div class="topbar-left">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span class="logo-text">V-IDS</span>
+            </div>
+            <span class="topbar-sep">|</span>
+            <span class="topbar-subtitle">Intrusion Detection System</span>
+        </div>
+        <div class="topbar-right">
+            <div class="status-pill" id="statusPill">
+                <span class="status-dot"></span>
+                <span class="status-text">Connecting...</span>
+            </div>
+            <div class="topbar-info">
+                <span class="info-label">Interface</span>
+                <span class="info-value" id="interfaceName">—</span>
+            </div>
+            <div class="topbar-info">
+                <span class="info-label">Uptime</span>
+                <span class="info-value" id="uptimeValue">—</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ Main Content ═══ -->
+    <main class="main-content">
+        <!-- ── Stats Cards Row ── -->
+        <section class="stats-row">
+            <div class="stat-card stat-total">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="stat-body">
+                    <span class="stat-number" id="totalAlerts">0</span>
+                    <span class="stat-label">Total Alerts</span>
+                </div>
+            </div>
+            <div class="stat-card stat-critical">
+                <div class="stat-icon critical-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                </div>
+                <div class="stat-body">
+                    <span class="stat-number" id="criticalAlerts">0</span>
+                    <span class="stat-label">Critical</span>
+                </div>
+            </div>
+            <div class="stat-card stat-high">
+                <div class="stat-icon high-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="stat-body">
+                    <span class="stat-number" id="highAlerts">0</span>
+                    <span class="stat-label">High</span>
+                </div>
+            </div>
+            <div class="stat-card stat-medium">
+                <div class="stat-icon medium-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <div class="stat-body">
+                    <span class="stat-number" id="mediumAlerts">0</span>
+                    <span class="stat-label">Medium</span>
+                </div>
+            </div>
+            <div class="stat-card stat-packets">
+                <div class="stat-icon packets-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                </div>
+                <div class="stat-body">
+                    <span class="stat-number" id="packetsProcessed">0</span>
+                    <span class="stat-label">Packets</span>
+                </div>
+            </div>
+            <div class="stat-card stat-pps">
+                <div class="stat-icon pps-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="stat-body">
+                    <span class="stat-number" id="ppsRate">0</span>
+                    <span class="stat-label">pkt/s</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Two Column Layout ── -->
+        <section class="content-grid">
+            <!-- ── Left: Live Alert Feed ── -->
+            <div class="panel alert-feed-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel-icon">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        Live Alert Feed
+                    </h2>
+                    <div class="panel-actions">
+                        <span class="live-badge">
+                            <span class="live-dot"></span>
+                            LIVE
+                        </span>
+                        <button class="btn-clear" id="clearAlerts" title="Clear feed">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="alert-feed" id="alertFeed">
+                    <div class="empty-state" id="emptyState">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        <p class="empty-title">Monitoring Active</p>
+                        <p class="empty-subtitle">No threats detected yet. V-IDS is watching your network.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Right: Panels ── -->
+            <div class="side-panels">
+                <!-- Live Traffic Feed -->
+                <div class="panel traffic-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel-icon">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                            Live Traffic
+                        </h2>
+                        <div class="panel-actions">
+                            <span class="traffic-rate" id="trafficRate">0 B/s</span>
+                            <span class="live-badge live-badge-sm">
+                                <span class="live-dot"></span>
+                                LIVE
+                            </span>
+                        </div>
+                    </div>
+                    <div class="traffic-feed" id="trafficFeed">
+                        <div class="traffic-empty">Waiting for packets...</div>
+                    </div>
+                </div>
+
+                <!-- Detection Rules -->
+                <div class="panel rules-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel-icon">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            Detection Rules
+                        </h2>
+                    </div>
+                    <div class="rules-list">
+                        <div class="rule-item" id="rulePortScan">
+                            <div class="rule-status on">ON</div>
+                            <div class="rule-info">
+                                <span class="rule-name">Port Scan</span>
+                                <span class="rule-detail">Unique ports: <span id="rulePortScanThresh">15</span> / <span id="rulePortScanWindow">60</span>s</span>
+                            </div>
+                            <span class="rule-severity sev-high">HIGH</span>
+                        </div>
+                        <div class="rule-item" id="ruleCleartext">
+                            <div class="rule-status on">ON</div>
+                            <div class="rule-info">
+                                <span class="rule-name">Cleartext Credentials</span>
+                                <span class="rule-detail">Ports: <span id="ruleCleartextPorts">21, 23, 80, 110, 143, 8080</span></span>
+                            </div>
+                            <span class="rule-severity sev-critical">CRITICAL</span>
+                        </div>
+                        <div class="rule-item" id="ruleIcmpFlood">
+                            <div class="rule-status on">ON</div>
+                            <div class="rule-info">
+                                <span class="rule-name">ICMP Flood</span>
+                                <span class="rule-detail">Threshold: <span id="ruleIcmpThresh">100</span> / <span id="ruleIcmpWindow">10</span>s + oversized</span>
+                            </div>
+                            <span class="rule-severity sev-medium">MEDIUM</span>
+                        </div>
+                        <div class="rule-item" id="ruleSSHBrute">
+                            <div class="rule-status on">ON</div>
+                            <div class="rule-info">
+                                <span class="rule-name">SSH Brute Force</span>
+                                <span class="rule-detail">Threshold: <span id="ruleSSHThresh">10</span> SYN→:22 / <span id="ruleSSHWindow">60</span>s</span>
+                            </div>
+                            <span class="rule-severity sev-high">HIGH</span>
+                        </div>
+                        <div class="rule-item" id="ruleHTTPThreat">
+                            <div class="rule-status on">ON</div>
+                            <div class="rule-info">
+                                <span class="rule-name">HTTP Threats</span>
+                                <span class="rule-detail">SQLi, XSS, traversal, RCE</span>
+                            </div>
+                            <span class="rule-severity sev-critical">CRITICAL</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Engine Status -->
+                <div class="panel engine-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel-icon">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                <line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                            Engine Status
+                        </h2>
+                    </div>
+                    <div class="engine-stats">
+                        <div class="engine-stat">
+                            <span class="engine-stat-label">Captured</span>
+                            <span class="engine-stat-value" id="engineCaptured">0</span>
+                        </div>
+                        <div class="engine-stat">
+                            <span class="engine-stat-label">Processed</span>
+                            <span class="engine-stat-value" id="engineProcessed">0</span>
+                        </div>
+                        <div class="engine-stat">
+                            <span class="engine-stat-label">Dropped</span>
+                            <span class="engine-stat-value" id="engineDropped">0</span>
+                        </div>
+                        <div class="engine-stat">
+                            <span class="engine-stat-label">Bytes</span>
+                            <span class="engine-stat-value" id="engineBytes">0</span>
+                        </div>
+                        <div class="engine-stat">
+                            <span class="engine-stat-label">Queue</span>
+                            <span class="engine-stat-value" id="engineQueue">0 / 10K</span>
+                        </div>
+                        <div class="engine-stat">
+                            <span class="engine-stat-label">Log File</span>
+                            <span class="engine-stat-value engine-stat-path" id="engineLogFile">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Traffic Graph -->
+                <div class="panel chart-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel-icon">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                            Traffic Over Time
+                        </h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Alert Distribution -->
+                <div class="panel distribution-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel-icon">
+                                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                            Alert Distribution
+                        </h2>
+                    </div>
+                    <div class="distribution-bars" id="distributionBars">
+                        <div class="dist-row">
+                            <span class="dist-label">PORT_SCAN</span>
+                            <div class="dist-bar-track"><div class="dist-bar dist-bar-high" id="barPortScan" style="width: 0%"></div></div>
+                            <span class="dist-count" id="countPortScan">0</span>
+                        </div>
+                        <div class="dist-row">
+                            <span class="dist-label">CLEARTEXT</span>
+                            <div class="dist-bar-track"><div class="dist-bar dist-bar-critical" id="barCleartext" style="width: 0%"></div></div>
+                            <span class="dist-count" id="countCleartext">0</span>
+                        </div>
+                        <div class="dist-row">
+                            <span class="dist-label">ICMP_FLOOD</span>
+                            <div class="dist-bar-track"><div class="dist-bar dist-bar-medium" id="barIcmpFlood" style="width: 0%"></div></div>
+                            <span class="dist-count" id="countIcmpFlood">0</span>
+                        </div>
+                        <div class="dist-row">
+                            <span class="dist-label">SSH_BRUTE</span>
+                            <div class="dist-bar-track"><div class="dist-bar dist-bar-high" id="barSSHBrute" style="width: 0%"></div></div>
+                            <span class="dist-count" id="countSSHBrute">0</span>
+                        </div>
+                        <div class="dist-row">
+                            <span class="dist-label">HTTP_THREAT</span>
+                            <div class="dist-bar-track"><div class="dist-bar dist-bar-critical" id="barHTTPThreat" style="width: 0%"></div></div>
+                            <span class="dist-count" id="countHTTPThreat">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ═══ Footer ═══ -->
+    <footer class="footer">
+        <span>V-IDS v2.0.0</span>
+        <span class="footer-sep">•</span>
+        <span>Host-Based Intrusion Detection System</span>
+    </footer>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
