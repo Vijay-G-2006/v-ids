@@ -52,9 +52,11 @@ All thresholds are configurable via `config/default.yaml`.
 
 ### Web Dashboard
 - Real-time alert feed via WebSocket
-- Statistics cards (total, critical, high, medium, packets)
+- Live Traffic Feed (shows protocol, ports, sizes)
+- Traffic Over Time Graph (Packets/min and Alerts/min)
+- Statistics cards (total, critical, high, medium, packets, pkt/s rate)
 - Detection rules status panel
-- Engine performance metrics
+- Engine performance metrics (bytes, queue depth, packets)
 - Alert distribution visualization
 - Dark theme with glassmorphism design
 
@@ -64,7 +66,7 @@ All thresholds are configurable via `config/default.yaml`.
 
 ```bash
 # Auto-installs dependencies, creates venv, and launches V-IDS
-sudo ./run.sh -i eth0
+sudo ./run.sh
 ```
 
 The bootstrap script (`run.sh`) automatically:
@@ -80,14 +82,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-sudo .venv/bin/python -m src.main -i eth0
+sudo .venv/bin/python -m src.main
 ```
 
 ### CLI Options
 
 | Flag | Description | Default |
 |---|---|---|
-| `-i, --interface` | Network interface to sniff on | *Required* |
+| `-i, --interface` | Network interface to sniff on | Auto-detect |
 | `-l, --log-file` | Path to alert log file | `/var/log/v-ids.log` |
 | `-c, --config` | Path to YAML config file | `config/default.yaml` |
 | `-v, --verbose` | Enable debug output | `False` |
@@ -102,9 +104,11 @@ The dashboard launches automatically on **http://localhost:8847** (configurable)
 
 Access it in your browser while V-IDS is running to see:
 - Live alert feed with real-time WebSocket updates
+- Live scrolling traffic feed showing network flow
+- Dynamic line charts tracking packet and alert rates
 - Alert statistics and severity distribution
 - Detection rule configuration status
-- Engine performance (captured/processed/dropped packets)
+- Engine performance (captured/processed/dropped packets, bytes, queue depth)
 
 Disable with `--no-dashboard` flag.
 
@@ -188,10 +192,7 @@ v-ids/
 - **Python 3.8+** — Core language
 - **Scapy** — Packet capture & protocol dissection
 - **Flask + Flask-SocketIO** — Real-time web dashboard
+- **Chart.js** — Traffic visualization charts
 - **PyYAML** — Configuration management
 - **Colorama** — Cross-platform terminal colors
 - **pytest** — Testing framework
-
-## License
-
-MIT
