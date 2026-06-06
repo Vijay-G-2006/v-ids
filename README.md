@@ -5,7 +5,7 @@
 
 ## Overview
 
-V-IDS captures live network traffic in promiscuous mode, dissects protocol headers (IPv4, TCP, UDP, ICMP), and identifies malicious activity using heuristic detection rules. Includes a real-time web dashboard for visual monitoring.
+V-IDS captures live network traffic in promiscuous mode, dissects protocol headers (IPv4, TCP, UDP, ICMP), and identifies malicious activity using heuristic detection rules. Includes a real-time web dashboard for visual monitoring
 
 ## Screenshots
 
